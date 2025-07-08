@@ -186,11 +186,11 @@ class GenericTab(QWidget):
                 self.stack.addWidget(QLabel(f"[Error] Functionality '{functionality}' not found"))
                 continue
 
-            if not hasattr(functionality_instance, module):
+            if not hasattr(functionality_instance, module.lower()):
                 self.stack.addWidget(QLabel(f"[Error] Module '{module}' not found"))
                 continue
 
-            module_instance = getattr(functionality_instance, module)
+            module_instance = getattr(functionality_instance, module.lower())
             module_widget = QWidget()
             module_layout = QVBoxLayout()
 
