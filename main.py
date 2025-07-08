@@ -2,12 +2,9 @@ import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QMessageBox
 from display import GenericTab
 from functions import functions
-import inspect
-import os
-import importlib
 
-sys.path.append("/home/joao/isr_tiago/planning/actions_tiago/src/actions_tiago_ros/tools")
-from tiago_api_interactive_shell import api
+import rospy
+from actions_tiago_ros.tiago_api import TiagoAPI
 
 
 '''
@@ -90,13 +87,16 @@ class MainWindow(QMainWindow):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
         self.setWindowTitle("TIAGo GUI")
         self.setMinimumSize(800, 500)
         self.tabs = QTabWidget()
 
+        self.api = TiagoAPI()
+
         for functionality in functions:
-            if hasattr(api, functionality):
-                tab = GenericTab(api, {functionality: functions[functionality]})
+            if hasattr(self.api, functionality):
+                tab = GenericTab(self.api, {functionality: functions[functionality]})
                 self.tabs.addTab(tab, functionality.capitalize())
             else:
                 print(f"[Warning] Functionality '{functionality}' not found in API instance.")
@@ -109,11 +109,12 @@ class MainWindow(QMainWindow):
         about_action.triggered.connect(self.show_about)
 
     def show_about(self):
-        QMessageBox.information(self, "About", "GUI.")
-
+        QMessageBox.information(self, "About", "TIAGo GUI.")
 
 
 if __name__ == "__main__":
+    rospy.init_node('tiago_gui_node', anonymous=True)
+
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
