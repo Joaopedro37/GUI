@@ -3,7 +3,6 @@ import ast
 import json
 from collections import OrderedDict
 
-
 def extract_type(annotation):
     if isinstance(annotation, ast.Name):
         return annotation.id
@@ -22,14 +21,12 @@ def extract_type(annotation):
     else:
         return "Any"
 
-
 def extract_functions_from_class(class_node):
     functions = OrderedDict()
-
     for item in class_node.body:
         if isinstance(item, ast.FunctionDef) and not item.name.startswith("_"):
             inputs = OrderedDict()
-            for arg in item.args.args[1:]:  # Ignore 'self'
+            for arg in item.args.args[1:]:  # skip 'self'
                 name = arg.arg
                 if arg.annotation:
                     inputs[name] = extract_type(arg.annotation)
@@ -48,16 +45,15 @@ def extract_functions_from_class(class_node):
 
     return functions
 
-
 def generate_function_dictionary(api_root, output_path="functions.py"):
     result = OrderedDict()
 
-    for functionality in sorted(os.listdir(api_root)):
-        path_func = os.path.join(api_root, functionality)
-        if not os.path.isdir(path_func) or functionality.startswith("__"):
+    for funcionalidade in sorted(os.listdir(api_root)):
+        path_func = os.path.join(api_root, funcionalidade)
+        if not os.path.isdir(path_func) or funcionalidade.startswith("__"):
             continue
 
-        result[functionality] = OrderedDict()
+        result[funcionalidade] = OrderedDict()
 
         for root, _, files in os.walk(path_func):
             if "test" in root or "__pycache__" in root:
@@ -73,35 +69,21 @@ def generate_function_dictionary(api_root, output_path="functions.py"):
                 try:
                     with open(file_path, "r", encoding="utf-8") as f:
                         tree = ast.parse(f.read())
-                except Exception as e:
-                    print(f"[Error while reading {file_path}]: {e}")
+                except Exception:
                     continue
 
                 module_functions = OrderedDict()
 
-                # 1. Look for 'Mixin' class
-                mixin_found = False
                 for node in tree.body:
-                    if isinstance(node, ast.ClassDef) and node.name == "Mixin":
+                    if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
                         functions = extract_functions_from_class(node)
-                        if functions:
-                            module_functions.update(functions)
-                            mixin_found = True
-                        break
-
-                #If no Mixin found collect public classes
-                if not mixin_found:
-                    for node in tree.body:
-                        if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
-                            class_functions = extract_functions_from_class(node)
-                            if class_functions:
-                                if node.name not in module_functions:
-                                    module_functions[node.name] = class_functions
+                        for fname, fdata in functions.items():
+                            if fname not in module_functions:
+                                module_functions[fname] = fdata
 
                 if module_functions:
-                    result[functionality][module_name] = module_functions if not mixin_found else module_functions
+                    result[funcionalidade][module_name] = module_functions
 
-    # Write to functions.py
     with open(output_path, "w", encoding="utf-8") as f:
         f.write("# Input types: bool, int, float, str, Tuple, List, choice, none\n")
         f.write("# Output types: Optional, Dict, List, Tuple, none\n")
@@ -111,6 +93,6 @@ def generate_function_dictionary(api_root, output_path="functions.py"):
 
     print(f"\nDictionary successfully generated at '{output_path}'\n")
 
-
 api_path = "D:/isr_tiago-ros-noetic/planning/actions_tiago/src/actions_tiago_ros"
 generate_function_dictionary(api_path)
+
