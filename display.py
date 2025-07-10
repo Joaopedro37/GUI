@@ -170,7 +170,6 @@ class GenericTab(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        # Assume there's only one top-level functionality in the dictionary
         functionality = next(iter(self.functions))
         modules = self.functions[functionality]
 
@@ -178,31 +177,26 @@ class GenericTab(QWidget):
         self.menu = QListWidget()
         self.stack = QStackedWidget()
 
-        for module, functions in modules.items():
-            self.menu.addItem(QListWidgetItem(module))
+        for module_name, function_dict in modules.items():
+            self.menu.addItem(QListWidgetItem(module_name))
 
             functionality_instance = getattr(self.api, functionality, None)
             if not functionality_instance:
                 self.stack.addWidget(QLabel(f"[Error] Functionality '{functionality}' not found"))
                 continue
 
-            if not hasattr(functionality_instance, module.lower()):
-                self.stack.addWidget(QLabel(f"[Error] Module '{module}' not found"))
-                continue
-
-            module_instance = getattr(functionality_instance, module.lower())
             module_widget = QWidget()
             module_layout = QVBoxLayout()
 
-            for function_name, config in functions.items():
-                if not hasattr(module_instance, function_name):
+            for function_name, config in function_dict.items():
+                # Assumimos que as funções são instanciadas diretamente como api.<funcionalidade>.<função>
+                if not hasattr(functionality_instance, function_name):
                     continue
-                func = getattr(module_instance, function_name)
+                func = getattr(functionality_instance, function_name)
                 function_layout = create_function_widgets(function_name, func, config)
                 module_layout.addLayout(function_layout)
 
             module_widget.setLayout(module_layout)
-
             scroll = QScrollArea()
             scroll.setWidget(module_widget)
             scroll.setWidgetResizable(True)
@@ -213,3 +207,4 @@ class GenericTab(QWidget):
         layout.addWidget(self.menu, 1)
         layout.addWidget(self.stack, 4)
         self.setLayout(layout)
+
