@@ -97,10 +97,18 @@ class PerceptionFaceRecognition:
 
 class PerceptionManipulation:
     def __init__(self):
+        # List of possible places
         self.places = ["kitchen", "bedroom", "garden"]
 
-    def tuf(self, name: str):
-        print(f"Going to {name}.")
+    # Simulates navigation to a location, if the name matches an available place
+    def move(self, name: str) -> str:
+        for place in self.places:
+            if name.lower() == place.lower():
+                message = f"Going to {place}."
+                return message
+
+        message = f"Place '{name}' not recognized. Available places: {', '.join(self.places)}"
+        return message
 
 
 class PerceptionMediapipe:
@@ -132,4 +140,5 @@ class PerceptionSurfaces:
         self.nothing()
 
     def nothing(self) -> None:
+
         return None
